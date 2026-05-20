@@ -1,4 +1,4 @@
-﻿const cells = Array.from(document.querySelectorAll(".cell"));
+const cells = Array.from(document.querySelectorAll(".cell"));
 const statusText = document.getElementById("status");
 const resetButton = document.getElementById("reset");
 const settingsToggleButton = document.getElementById("settings-toggle");
@@ -36,6 +36,7 @@ const nicknameInput = document.getElementById("nickname-input");
 const nicknameError = document.getElementById("nickname-error");
 const nicknameConfirmButton = document.getElementById("nickname-confirm");
 const nicknameCloseButton = document.getElementById("nickname-close");
+const startupColorsTitle = document.getElementById("startup-colors-title");
 const playerNameDisplay = document.getElementById("player-name-display");
 const nicknameLanguageInputs = document.querySelectorAll('input[name="nickname-language"]');
 const changeNameButton = document.getElementById("change-name-button");
@@ -60,11 +61,12 @@ let computerDifficulty = "normal";
 let winLineColor = "yellow";
 let language = "en";
 let playerName = "";
-let playerMark = "X";
+let playerMark = "";
 let nextStartingMark = "X";
 let hasStarted = false;
 let nicknameModalSnapshot = null;
 let isSoundOn = true;
+let startupOpponentColorsOpen = false;
 const scores = { X: 0, O: 0 };
 const markStyles = { X: "x_red", O: "o_green" };
 let previewOriginalStyles = { X: "x_red", O: "o_green" };
@@ -110,6 +112,7 @@ const i18n = {
     nicknamePlaceholder: "\u05d4\u05e7\u05dc\u05d3 \u05db\u05d9\u05e0\u05d5\u05d9",
     startGame: "\u05d4\u05ea\u05d7\u05dc \u05de\u05e9\u05d7\u05e7",
     nicknameError: "\u05e6\u05e8\u05d9\u05da \u05dc\u05d4\u05e7\u05dc\u05d9\u05d3 \u05db\u05d9\u05e0\u05d5\u05d9",
+    chooseMarkError: "\u05e6\u05e8\u05d9\u05da \u05dc\u05d1\u05d7\u05d5\u05e8 X \u05d0\u05d5 O",
     changeName: "\u05e9\u05e0\u05d4 \u05d1\u05d7\u05d9\u05e8\u05d5\u05ea",
     chooseMark: "\u05d1\u05d7\u05e8 \u05d1\u05de\u05d4 \u05d0\u05ea\u05d4 \u05de\u05e9\u05d7\u05e7:",
     chooseStartupColors: "\u05d1\u05d7\u05e8 \u05e6\u05d1\u05e2\u05d9\u05dd:",
@@ -145,6 +148,7 @@ const i18n = {
     nicknamePlaceholder: "Enter nickname",
     startGame: "Start Game",
     nicknameError: "Please enter a nickname",
+    chooseMarkError: "Please choose X or O",
     changeName: "Change Choices",
     chooseMark: "Choose your mark:",
     chooseStartupColors: "Choose colors:",
@@ -233,6 +237,10 @@ function getComputerMark() {
   return playerMark === "X" ? "O" : "X";
 }
 
+function getOpponentMark(mark) {
+  return mark === "X" ? "O" : "X";
+}
+
 function getStyleColor(styleValue) {
   return styleValue.split("_")[1];
 }
@@ -279,23 +287,68 @@ function updateColorOptionLocks(xInputName, oInputName, changedMark = "X") {
   });
 }
 
+function setStartupMarkOptionsEnabled(mark, isEnabled) {
+  document.querySelectorAll(`[data-startup-mark="${mark}"] input`).forEach((input) => {
+    input.disabled = !isEnabled;
+    input.closest(".color-option")?.classList.toggle("is-disabled", !isEnabled);
+  });
+}
+
+function updateStartupColorFlow() {
+  const selectedPlayerMark = getCheckedValue("player-mark", "");
+  const hasSelectedMark = selectedPlayerMark === "X" || selectedPlayerMark === "O";
+  startupColorsTitle.classList.toggle("is-flow-hidden", !hasSelectedMark);
+
+  if (!hasSelectedMark) {
+    document.querySelectorAll("[data-startup-mark]").forEach((element) => {
+      element.classList.add("is-flow-hidden");
+      element.style.order = "";
+    });
+    setStartupMarkOptionsEnabled("X", false);
+    setStartupMarkOptionsEnabled("O", false);
+    return;
+  }
+
+  const opponentMark = getOpponentMark(selectedPlayerMark);
+
+  document.querySelectorAll("[data-startup-mark]").forEach((element) => {
+    const mark = element.dataset.startupMark;
+    const shouldShow = mark === selectedPlayerMark || (startupOpponentColorsOpen && mark === opponentMark);
+    element.classList.toggle("is-flow-hidden", !shouldShow);
+    element.style.order = mark === selectedPlayerMark ? "1" : "2";
+  });
+
+  setStartupMarkOptionsEnabled(selectedPlayerMark, true);
+
+  if (!startupOpponentColorsOpen) {
+    setStartupMarkOptionsEnabled(opponentMark, false);
+  } else {
+    updateColorOptionLocks("startup-x-style", "startup-o-style", selectedPlayerMark);
+    setStartupMarkOptionsEnabled(selectedPlayerMark, true);
+  }
+}
+
 function isComputerTurn() {
-  return gameMode === "computer" && currentPlayer === getComputerMark();
+  return Boolean(playerMark) && gameMode === "computer" && currentPlayer === getComputerMark();
 }
 
 function syncStartupChoices() {
   const playerMarkInput = document.querySelector(`input[name="player-mark"][value="${playerMark}"]`);
   const xStyleInput = document.querySelector(`input[name="startup-x-style"][value="${markStyles.X}"]`);
   const oStyleInput = document.querySelector(`input[name="startup-o-style"][value="${markStyles.O}"]`);
+  document.querySelectorAll('input[name="player-mark"]').forEach((input) => {
+    input.checked = false;
+  });
   if (playerMarkInput) playerMarkInput.checked = true;
   if (xStyleInput) xStyleInput.checked = true;
   if (oStyleInput) oStyleInput.checked = true;
-  updateColorOptionLocks("startup-x-style", "startup-o-style", "X");
+  startupOpponentColorsOpen = false;
+  updateStartupColorFlow();
 }
 
 function applyStartupChoices() {
-  updateColorOptionLocks("startup-x-style", "startup-o-style", "X");
   playerMark = getCheckedValue("player-mark", playerMark);
+  updateColorOptionLocks("startup-x-style", "startup-o-style", playerMark || "X");
   markStyles.X = getCheckedValue("startup-x-style", markStyles.X);
   markStyles.O = getCheckedValue("startup-o-style", markStyles.O);
   updatePlayerScoreHighlight();
@@ -666,6 +719,12 @@ function confirmNickname() {
     return;
   }
 
+  const selectedPlayerMark = getCheckedValue("player-mark", "");
+  if (!selectedPlayerMark) {
+    nicknameError.textContent = t("chooseMarkError");
+    return;
+  }
+
   const previousPlayerMark = playerMark;
   const wasStarted = hasStarted;
   playerName = nextName;
@@ -782,7 +841,18 @@ function previewMarkStyle(event) {
 
 function handleStartupColorChange(event) {
   const changedMark = event.target.name === "startup-o-style" ? "O" : "X";
+  const selectedPlayerMark = getCheckedValue("player-mark", playerMark);
+  if (changedMark === selectedPlayerMark) {
+    startupOpponentColorsOpen = true;
+  }
   updateColorOptionLocks("startup-x-style", "startup-o-style", changedMark);
+  updateStartupColorFlow();
+}
+
+function handleStartupPlayerMarkChange() {
+  startupOpponentColorsOpen = false;
+  nicknameError.textContent = "";
+  updateStartupColorFlow();
 }
 
 function choosePlayerMarkFromScoreboard(nextPlayerMark) {
@@ -889,6 +959,9 @@ nicknameLanguageInputs.forEach((input) => {
 });
 document.querySelectorAll('input[name="startup-x-style"], input[name="startup-o-style"]').forEach((input) => {
   input.addEventListener("change", handleStartupColorChange);
+});
+document.querySelectorAll('input[name="player-mark"]').forEach((input) => {
+  input.addEventListener("change", handleStartupPlayerMarkChange);
 });
 changeNameButton.addEventListener("click", openNicknameModal);
 
