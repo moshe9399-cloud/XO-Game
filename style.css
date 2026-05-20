@@ -2,6 +2,13 @@
   box-sizing: border-box;
 }
 
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -381,6 +388,8 @@ body {
 }
 
 .cell {
+  -webkit-appearance: none;
+  appearance: none;
   position: relative;
   border: 0;
   border-radius: 8px;
@@ -388,6 +397,7 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-color: transparent;
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -415,6 +425,8 @@ body {
 .cell:disabled {
   cursor: default;
   opacity: 0.9;
+  background-image: url("Assets/Cells.png");
+  background-color: transparent;
 }
 
 .mark-image {
