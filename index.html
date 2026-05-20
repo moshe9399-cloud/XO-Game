@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>איקס עיגול</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game">
+    <img class="title-image" src="Assets/Eix Eigol.png" alt="איקס עיגול">
+    <div class="player-name-row">
+      <p id="player-name-display" class="player-name-display"></p>
+    </div>
+    <button id="change-name-button" class="change-name-button hidden" type="button"></button>
+    <div class="top-actions">
+      <button id="settings-toggle" type="button">הגדרות</button>
+      <button id="sound-toggle" class="sound-toggle is-on" type="button" aria-label="Sound on">🔊</button>
+    </div>
+    <p id="status">תור של X</p>
+    <section class="scoreboard" aria-label="תוצאה">
+      <div id="x-score-card" class="score-card">
+        <button id="x-style-button" class="score-label-button" type="button" aria-label="X">
+          <img class="score-icon" src="Assets/icon/איקס.png" alt="X">
+        </button>
+        <span id="score-x" class="score-value">0</span>
+      </div>
+      <div id="o-score-card" class="score-card">
+        <button id="o-style-button" class="score-label-button" type="button" aria-label="O">
+          <img class="score-icon" src="Assets/icon/עיגול.png" alt="O">
+        </button>
+        <span id="score-o" class="score-value">0</span>
+      </div>
+    </section>
+    <div class="board-wrap">
+      <section class="board" id="board" aria-label="לוח איקס עיגול">
+        <button class="cell" data-index="0" aria-label="תא 1"></button>
+        <button class="cell" data-index="1" aria-label="תא 2"></button>
+        <button class="cell" data-index="2" aria-label="תא 3"></button>
+        <button class="cell" data-index="3" aria-label="תא 4"></button>
+        <button class="cell" data-index="4" aria-label="תא 5"></button>
+        <button class="cell" data-index="5" aria-label="תא 6"></button>
+        <button class="cell" data-index="6" aria-label="תא 7"></button>
+        <button class="cell" data-index="7" aria-label="תא 8"></button>
+        <button class="cell" data-index="8" aria-label="תא 9"></button>
+      </section>
+      <div id="win-line" aria-hidden="true"></div>
+    </div>
+    <button id="reset">משחק חדש</button>
+  </main>
+
+  <section id="nickname-modal" class="modal" aria-label="בחירת כינוי">
+    <div id="nickname-card" class="modal-card result-card">
+      <button id="nickname-close" class="modal-close-button hidden" type="button" aria-label="Close">×</button>
+      <div class="language-options nickname-language-options">
+        <label class="language-option">
+          <input type="radio" name="nickname-language" value="en" checked>
+          <img class="language-flag-image" src="Assets/Eng.png" alt="English">
+          <span>English</span>
+        </label>
+        <label class="language-option">
+          <input type="radio" name="nickname-language" value="he">
+          <img class="language-flag-image" src="Assets/Heb.png" alt="עברית">
+          <span>עברית</span>
+        </label>
+      </div>
+      <p id="nickname-title" class="settings-title">בחר כינוי</p>
+      <input id="nickname-input" class="nickname-input" type="text" maxlength="18" autocomplete="off">
+      <p id="nickname-error" class="nickname-error"></p>
+      <p class="settings-title small-title" data-i18n="chooseMark">Choose your mark:</p>
+      <div class="player-mark-options">
+        <label class="player-mark-option">
+          <input type="radio" name="player-mark" value="X" checked>
+          <img class="player-mark-icon" src="Assets/icon/איקס.png" alt="X">
+        </label>
+        <label class="player-mark-option">
+          <input type="radio" name="player-mark" value="O">
+          <img class="player-mark-icon" src="Assets/icon/עיגול.png" alt="O">
+        </label>
+      </div>
+      <p class="settings-title small-title" data-i18n="chooseStartupColors">Choose colors:</p>
+      <div class="startup-color-options color-options mark-color-grid">
+        <p class="color-section-label">X</p>
+        <label class="color-option">
+          <input type="radio" name="startup-x-style" value="x_green">
+          <img src="Assets/XXX Green.png" alt="X Green">
+          <span data-i18n="green">Green</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="startup-x-style" value="x_yellow">
+          <img src="Assets/XXX Yellow.png" alt="X Yellow">
+          <span data-i18n="yellow">Yellow</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="startup-x-style" value="x_red" checked>
+          <img src="Assets/XXX Red.png" alt="X Red">
+          <span data-i18n="red">Red</span>
+        </label>
+        <p class="color-section-label">O</p>
+        <label class="color-option">
+          <input type="radio" name="startup-o-style" value="o_green" checked>
+          <img src="Assets/OOO Green.png" alt="O Green">
+          <span data-i18n="green">Green</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="startup-o-style" value="o_yellow">
+          <img src="Assets/OOO Yellow.png" alt="O Yellow">
+          <span data-i18n="yellow">Yellow</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="startup-o-style" value="o_red">
+          <img src="Assets/OOO Red.png" alt="O Red">
+          <span data-i18n="red">Red</span>
+        </label>
+      </div>
+      <div class="modal-actions single-action">
+        <button id="nickname-confirm" type="button">התחל משחק</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings-modal" class="modal hidden" aria-label="הגדרות משחק">
+    <div id="settings-card" class="modal-card draggable-modal settings-card">
+      <p class="settings-title modal-drag-handle" data-i18n="settingsTitle">הגדרות משחק</p>
+      <p class="settings-title small-title" data-i18n="modeTitle">בחר נגד מי לשחק:</p>
+      <label class="settings-option">
+        <input type="radio" name="game-mode" value="friend">
+        <span data-i18n="modeFriend">נגד חבר</span>
+      </label>
+      <label class="settings-option">
+        <input type="radio" name="game-mode" value="computer" checked>
+        <span data-i18n="modeComputer">נגד מחשב</span>
+      </label>
+      <p class="settings-title small-title" data-i18n="difficultyTitle">Computer Level:</p>
+      <div class="difficulty-options">
+        <label class="difficulty-option">
+          <input type="radio" name="computer-difficulty" value="easy">
+          <span>Easy</span>
+        </label>
+        <label class="difficulty-option">
+          <input type="radio" name="computer-difficulty" value="normal" checked>
+          <span>Normal</span>
+        </label>
+        <label class="difficulty-option">
+          <input type="radio" name="computer-difficulty" value="hard">
+          <span>Hard</span>
+        </label>
+      </div>
+      <p class="settings-title small-title" data-i18n="lineColorTitle">צבע קו ניצחון:</p>
+      <div class="color-options">
+        <label class="color-option">
+          <input type="radio" name="win-line-color" value="yellow" checked>
+          <img src="Assets/grass yellow.png" alt="Yellow">
+          <span data-i18n="yellow">צהוב</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="win-line-color" value="green">
+          <img src="Assets/grass green.png" alt="Green">
+          <span data-i18n="green">ירוק</span>
+        </label>
+      </div>
+      <p class="settings-title small-title" data-i18n="languageTitle">שפה</p>
+      <div class="language-options">
+        <label class="language-option">
+          <input type="radio" name="language" value="he">
+          <img class="language-flag-image" src="Assets/Heb.png" alt="Israel Flag">
+          <span data-i18n="hebrew">עברית</span>
+        </label>
+        <label class="language-option">
+          <input type="radio" name="language" value="en" checked>
+          <img class="language-flag-image" src="Assets/Eng.png" alt="UK Flag">
+          <span data-i18n="english">English</span>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button id="settings-cancel" type="button" data-i18n="cancel">ביטול</button>
+        <button id="settings-apply" type="button" data-i18n="confirm">אישור</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="mark-style-modal" class="modal hidden" aria-label="בחירת צבע סימון">
+    <div id="mark-style-card" class="modal-card draggable-modal">
+      <p id="modal-title" class="settings-title modal-drag-handle">בחירת צבע</p>
+      <div id="modal-options" class="color-options"></div>
+      <p id="preview-note" class="preview-note">Preview מוצג על הלוח לפני אישור</p>
+      <div class="modal-actions">
+        <button id="modal-cancel" type="button">Cancel</button>
+        <button id="modal-apply" type="button">Confirm</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="result-modal" class="modal hidden" aria-label="תוצאת משחק">
+    <div id="result-card" class="modal-card result-card draggable-modal">
+      <p id="result-title" class="settings-title modal-drag-handle">סיום משחק</p>
+      <p id="result-message" class="result-message"></p>
+      <div class="modal-actions single-action">
+        <button id="result-confirm" type="button">אישור</button>
+      </div>
+    </div>
+  </section>
+  <script src="script.js"></script>
+</body>
+</html>
