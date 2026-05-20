@@ -1,7 +1,9 @@
 name: Apply Codex XO patch
 
-on:
+'on':
   push:
+    branches:
+      - main
     paths:
       - '.github/workflows/apply-codex-patch.yml'
   workflow_dispatch:
@@ -13,131 +15,5 @@ jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Apply game fixes
-        run: |
-          python3 <<'PY'
-          from pathlib import Path
-          import re
-
-          index_path = Path('index.html')
-          script_path = Path('script.js')
-          style_path = Path('style.css')
-
-          index = index_path.read_text(encoding='utf-8-sig')
-          index = index.replace('name="player-mark" value="X" checked>', 'name="player-mark" value="X">')
-          index = index.replace('<p class="settings-title small-title" data-i18n="chooseStartupColors">Choose colors:</p>', '<p id="startup-colors-title" class="settings-title small-title" data-i18n="chooseStartupColors">Choose colors:</p>')
-          index = index.replace('<p class="color-section-label">X</p>', '<p class="color-section-label" data-startup-mark="X">X</p>', 1)
-          index = index.replace('<p class="color-section-label">O</p>', '<p class="color-section-label" data-startup-mark="O">O</p>', 1)
-          index = re.sub(r'(<label class="color-option">\n\s*<input type="radio" name="startup-x-style")', r'<label class="color-option" data-startup-mark="X">\n          <input type="radio" name="startup-x-style"', index)
-          index = re.sub(r'(<label class="color-option">\n\s*<input type="radio" name="startup-o-style")', r'<label class="color-option" data-startup-mark="O">\n          <input type="radio" name="startup-o-style"', index)
-          index_path.write_text(index, encoding='utf-8')
-
-          script = script_path.read_text(encoding='utf-8-sig')
-          script = script.replace('const nicknameCloseButton = document.getElementById("nickname-close");\n', 'const nicknameCloseButton = document.getElementById("nickname-close");\nconst startupColorsTitle = document.getElementById("startup-colors-title");\n')
-          script = script.replace('let playerMark = "X";', 'let playerMark = "";')
-          script = script.replace('let isSoundOn = true;\n', 'let isSoundOn = true;\nlet startupOpponentColorsOpen = false;\n')
-          script = script.replace('nicknameError: "\\u05e6\\u05e8\\u05d9\\u05da \\u05dc\\u05d4\\u05e7\\u05dc\\u05d9\\u05d3 \\u05db\\u05d9\\u05e0\\u05d5\\u05d9",\n', 'nicknameError: "\\u05e6\\u05e8\\u05d9\\u05da \\u05dc\\u05d4\\u05e7\\u05dc\\u05d9\\u05d3 \\u05db\\u05d9\\u05e0\\u05d5\\u05d9",\n    chooseMarkError: "\\u05e6\\u05e8\\u05d9\\u05da \\u05dc\\u05d1\\u05d7\\u05d5\\u05e8 X \\u05d0\\u05d5 O",\n')
-          script = script.replace('nicknameError: "Please enter a nickname",\n', 'nicknameError: "Please enter a nickname",\n    chooseMarkError: "Please choose X or O",\n')
-          script = script.replace('function getComputerMark() {\n  return playerMark === "X" ? "O" : "X";\n}\n', 'function getComputerMark() {\n  return playerMark === "X" ? "O" : "X";\n}\n\nfunction getOpponentMark(mark) {\n  return mark === "X" ? "O" : "X";\n}\n')
-          script = script.replace('return gameMode === "computer" && currentPlayer === getComputerMark();', 'return Boolean(playerMark) && gameMode === "computer" && currentPlayer === getComputerMark();')
-
-          new_flow = r'''function setStartupMarkOptionsEnabled(mark, isEnabled) {
-  document.querySelectorAll(`[data-startup-mark="${mark}"] input`).forEach((input) => {
-    input.disabled = !isEnabled;
-    input.closest(".color-option")?.classList.toggle("is-disabled", !isEnabled);
-  });
-}
-
-function updateStartupColorFlow() {
-  const selectedPlayerMark = getCheckedValue("player-mark", "");
-  const hasSelectedMark = selectedPlayerMark === "X" || selectedPlayerMark === "O";
-  startupColorsTitle.classList.toggle("is-flow-hidden", !hasSelectedMark);
-
-  if (!hasSelectedMark) {
-    document.querySelectorAll("[data-startup-mark]").forEach((element) => {
-      element.classList.add("is-flow-hidden");
-      element.style.order = "";
-    });
-    setStartupMarkOptionsEnabled("X", false);
-    setStartupMarkOptionsEnabled("O", false);
-    return;
-  }
-
-  const opponentMark = getOpponentMark(selectedPlayerMark);
-  document.querySelectorAll("[data-startup-mark]").forEach((element) => {
-    const mark = element.dataset.startupMark;
-    const shouldShow = mark === selectedPlayerMark || (startupOpponentColorsOpen && mark === opponentMark);
-    element.classList.toggle("is-flow-hidden", !shouldShow);
-    element.style.order = mark === selectedPlayerMark ? "1" : "2";
-  });
-
-  setStartupMarkOptionsEnabled(selectedPlayerMark, true);
-  if (!startupOpponentColorsOpen) {
-    setStartupMarkOptionsEnabled(opponentMark, false);
-  } else {
-    updateColorOptionLocks("startup-x-style", "startup-o-style", selectedPlayerMark);
-    setStartupMarkOptionsEnabled(selectedPlayerMark, true);
-  }
-}
-
-function syncStartupChoices() {
-  const playerMarkInput = document.querySelector(`input[name="player-mark"][value="${playerMark}"]`);
-  const xStyleInput = document.querySelector(`input[name="startup-x-style"][value="${markStyles.X}"]`);
-  const oStyleInput = document.querySelector(`input[name="startup-o-style"][value="${markStyles.O}"]`);
-  document.querySelectorAll('input[name="player-mark"]').forEach((input) => {
-    input.checked = false;
-  });
-  if (playerMarkInput) playerMarkInput.checked = true;
-  if (xStyleInput) xStyleInput.checked = true;
-  if (oStyleInput) oStyleInput.checked = true;
-  startupOpponentColorsOpen = false;
-  updateStartupColorFlow();
-}
-'''
-          script = re.sub(r'function syncStartupChoices\(\) \{.*?\n\}\n\nfunction applyStartupChoices', new_flow + '\nfunction applyStartupChoices', script, flags=re.S)
-          script = script.replace('  const previousPlayerMark = playerMark;\n', '  const selectedPlayerMark = getCheckedValue("player-mark", "");\n  if (!selectedPlayerMark) {\n    nicknameError.textContent = t("chooseMarkError");\n    return;\n  }\n\n  const previousPlayerMark = playerMark;\n')
-          script = re.sub(r'function handleStartupColorChange\(event\) \{.*?\n\}\n\nfunction choosePlayerMarkFromScoreboard', 'function handleStartupColorChange(event) {\n  const changedMark = event.target.name === "startup-o-style" ? "O" : "X";\n  const selectedPlayerMark = getCheckedValue("player-mark", playerMark);\n  if (changedMark === selectedPlayerMark) {\n    startupOpponentColorsOpen = true;\n  }\n  updateColorOptionLocks("startup-x-style", "startup-o-style", changedMark);\n  updateStartupColorFlow();\n}\n\nfunction handleStartupPlayerMarkChange() {\n  startupOpponentColorsOpen = false;\n  nicknameError.textContent = "";\n  updateStartupColorFlow();\n}\n\nfunction choosePlayerMarkFromScoreboard', script, flags=re.S)
-          script = script.replace('document.querySelectorAll(\'input[name="startup-x-style"], input[name="startup-o-style"]\').forEach((input) => {\n  input.addEventListener("change", handleStartupColorChange);\n});\n', 'document.querySelectorAll(\'input[name="startup-x-style"], input[name="startup-o-style"]\').forEach((input) => {\n  input.addEventListener("change", handleStartupColorChange);\n});\ndocument.querySelectorAll(\'input[name="player-mark"]\').forEach((input) => {\n  input.addEventListener("change", handleStartupPlayerMarkChange);\n});\n')
-          script_path.write_text(script, encoding='utf-8')
-
-          style = style_path.read_text(encoding='utf-8-sig')
-          addon = '''
-button {
-  -webkit-appearance: none;
-  appearance: none;
-  font: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.cell {
-  -webkit-appearance: none;
-  appearance: none;
-  background-color: transparent;
-}
-
-.cell:disabled {
-  background-image: url("Assets/Cells.png");
-  background-color: transparent;
-}
-
-.startup-color-options .is-flow-hidden,
-#startup-colors-title.is-flow-hidden {
-  display: none;
-}
-'''
-          if 'startup-color-options .is-flow-hidden' not in style:
-            style += addon
-          style_path.write_text(style, encoding='utf-8')
-          PY
-      - name: Commit patch
-        run: |
-          git config user.name "codex-bot"
-          git config user.email "codex-bot@users.noreply.github.com"
-          git add index.html script.js style.css
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Update startup choices flow and mobile styles"
-            git push
-          fi
+      - name: Verify workflow can run
+        run: echo "Codex workflow is running"
