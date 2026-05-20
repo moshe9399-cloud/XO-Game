@@ -752,8 +752,12 @@ function openNicknameModal() {
   nicknameCloseButton.classList.toggle("hidden", !hasStarted);
   nicknameModal.classList.remove("hidden");
   centerModalCard(nicknameCard);
-  nicknameInput.focus();
-  nicknameInput.select();
+  if (!hasStarted) {
+    nicknameInput.focus();
+    nicknameInput.select();
+  } else {
+    nicknameInput.blur();
+  }
 }
 
 function closeNicknameModal() {
@@ -874,6 +878,11 @@ function handleGlobalKeydown(event) {
   handleResultConfirm();
 }
 
+function handleModalBackdropClick(event, closeAction) {
+  if (event.target !== event.currentTarget) return;
+  closeAction();
+}
+
 function centerModalCard(cardElement) {
   cardElement.style.left = "50%";
   cardElement.style.top = "50%";
@@ -944,6 +953,10 @@ modalOptions.addEventListener("change", previewMarkStyle);
 resultConfirmButton.addEventListener("click", handleResultConfirm);
 document.addEventListener("keydown", handleGlobalKeydown);
 nicknameCloseButton.addEventListener("click", closeNicknameModal);
+settingsModal.addEventListener("click", (event) => handleModalBackdropClick(event, closeSettingsModal));
+markStyleModal.addEventListener("click", (event) => handleModalBackdropClick(event, closeMarkStylePicker));
+resultModal.addEventListener("click", (event) => handleModalBackdropClick(event, handleResultConfirm));
+nicknameModal.addEventListener("click", (event) => handleModalBackdropClick(event, closeNicknameModal));
 enableModalDrag(markStyleModal, markStyleCard);
 enableModalDrag(resultModal, resultCard);
 enableModalDrag(settingsModal, settingsCard);
