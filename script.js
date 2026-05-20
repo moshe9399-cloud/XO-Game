@@ -351,7 +351,7 @@ function applyStartupChoices() {
   updateColorOptionLocks("startup-x-style", "startup-o-style", playerMark || "X");
   markStyles.X = getCheckedValue("startup-x-style", markStyles.X);
   markStyles.O = getCheckedValue("startup-o-style", markStyles.O);
-  updatePlayerScoreHighlight();
+  updateTurnScoreHighlight();
   rerenderMarksOnBoard();
 }
 
@@ -375,7 +375,7 @@ function restoreNicknameModalSnapshot() {
   syncLanguageInputs();
   syncStartupChoices();
   applyLanguageToUI();
-  updatePlayerScoreHighlight();
+  updateTurnScoreHighlight();
   rerenderMarksOnBoard();
 }
 
@@ -391,6 +391,7 @@ function checkWinner() {
 
 function updateStatusText() {
   if (!isGameActive) return;
+  updateTurnScoreHighlight();
   if (isComputerTurn()) {
     statusText.textContent = `${t("computerTurn")} (${getComputerMark()})`;
     return;
@@ -403,9 +404,9 @@ function updateScoreboard() {
   scoreOElement.textContent = String(scores.O);
 }
 
-function updatePlayerScoreHighlight() {
-  xScoreCard.classList.toggle("is-player-card", playerMark === "X");
-  oScoreCard.classList.toggle("is-player-card", playerMark === "O");
+function updateTurnScoreHighlight() {
+  xScoreCard.classList.toggle("is-current-turn", isGameActive && currentPlayer === "X");
+  oScoreCard.classList.toggle("is-current-turn", isGameActive && currentPlayer === "O");
 }
 
 function applyWinLineColor() {
@@ -454,6 +455,7 @@ function finishGameIfNeeded() {
   const { winner, pattern } = checkWinner();
   if (winner) {
     isGameActive = false;
+    updateTurnScoreHighlight();
     scores[winner] += 1;
     updateScoreboard();
     statusText.textContent = `${t("player")} ${winner} ${t("winner")}`;
@@ -465,6 +467,7 @@ function finishGameIfNeeded() {
 
   if (board.every((value) => value)) {
     isGameActive = false;
+    updateTurnScoreHighlight();
     statusText.textContent = t("draw");
     showEndGamePopup(t("draw"));
     return true;
@@ -863,7 +866,7 @@ function choosePlayerMarkFromScoreboard(nextPlayerMark) {
   if (playerMark === nextPlayerMark) return;
   playerMark = nextPlayerMark;
   syncStartupChoices();
-  updatePlayerScoreHighlight();
+  updateTurnScoreHighlight();
   resetAll();
 }
 
@@ -982,7 +985,7 @@ syncLanguageInputs();
 syncStartupChoices();
 applyLanguageToUI();
 updateScoreboard();
-updatePlayerScoreHighlight();
+updateTurnScoreHighlight();
 applyWinLineColor();
 resetGame();
 centerModalCard(nicknameCard);
