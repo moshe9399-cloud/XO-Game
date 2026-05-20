@@ -401,11 +401,7 @@ body {
   position: relative;
   border: 0;
   border-radius: 8px;
-  background-image: url("Assets/Cells.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: transparent;
+  background: transparent;
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -417,6 +413,7 @@ body {
   min-width: 0;
   min-height: 0;
   box-shadow: 0 8px 14px rgba(10, 17, 34, 0.35);
+  isolation: isolate;
 }
 
 .cell::before {
@@ -430,16 +427,28 @@ body {
   z-index: 0;
 }
 
+.cell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background-image: url("Assets/Cells.png?v=4");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 1;
+}
+
 .cell:disabled {
   cursor: default;
   opacity: 0.9;
-  background-image: url("Assets/Cells.png");
-  background-color: transparent;
+  background: transparent;
 }
 
 .mark-image {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 74%;
   height: 74%;
   object-fit: contain;
