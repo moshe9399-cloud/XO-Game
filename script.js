@@ -77,8 +77,8 @@ const markIconByMark = {
   O: oStyleButton.querySelector(".score-icon").getAttribute("src")
 };
 const markStyleOrder = {
-  X: ["x_green", "x_yellow", "x_purple", "x_blue", "x_red"],
-  O: ["o_green", "o_yellow", "o_purple", "o_blue", "o_red"]
+  X: ["x_green", "x_yellow", "x_red", "x_blue", "x_purple"],
+  O: ["o_green", "o_yellow", "o_red", "o_blue", "o_purple"]
 };
 
 let board = Array(9).fill("");
