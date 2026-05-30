@@ -412,7 +412,11 @@ body {
   position: relative;
   border: 0;
   border-radius: 8px;
-  background: transparent;
+  background-color: transparent;
+  background-image: url("Assets/Cells.png?v=10");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -443,7 +447,7 @@ body {
   position: absolute;
   inset: 0;
   border-radius: 8px;
-  background-image: url("Assets/Cells.png?v=4");
+  background-image: url("Assets/Cells.png?v=10");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -454,7 +458,11 @@ body {
 .cell:disabled {
   cursor: default;
   opacity: 0.9;
-  background: transparent;
+  background-color: transparent;
+  background-image: url("Assets/Cells.png?v=10");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .mark-image {
