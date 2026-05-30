@@ -1,4 +1,4 @@
-const cells = Array.from(document.querySelectorAll(".cell"));
+﻿const cells = Array.from(document.querySelectorAll(".cell"));
 const statusText = document.getElementById("status");
 const resetButton = document.getElementById("reset");
 const settingsToggleButton = document.getElementById("settings-toggle");
@@ -44,13 +44,15 @@ const markImageByStyle = {
   x_red: "Assets/XXX Red.png",
   x_yellow: "Assets/XXX Yellow.png",
   x_green: "Assets/XXX Green.png",
+  x_purple: "Assets/XXX Purple.png",
   o_green: "Assets/OOO Green.png",
   o_red: "Assets/OOO Red.png",
-  o_yellow: "Assets/OOO Yellow.png"
+  o_yellow: "Assets/OOO Yellow.png",
+  o_purple: "Assets/OOO Purple.png"
 };
 const markStyleOrder = {
-  X: ["x_green", "x_yellow", "x_red"],
-  O: ["o_green", "o_yellow", "o_red"]
+  X: ["x_green", "x_yellow", "x_purple", "x_red"],
+  O: ["o_green", "o_yellow", "o_purple", "o_red"]
 };
 
 let board = Array(9).fill("");
@@ -97,6 +99,7 @@ const i18n = {
     english: "English",
     yellow: "\u05e6\u05d4\u05d5\u05d1",
     green: "\u05d9\u05e8\u05d5\u05e7",
+    purple: "\u05e1\u05d2\u05d5\u05dc",
     red: "\u05d0\u05d3\u05d5\u05dd",
     cancel: "\u05d1\u05d9\u05d8\u05d5\u05dc",
     confirm: "\u05d0\u05d9\u05e9\u05d5\u05e8",
@@ -133,6 +136,7 @@ const i18n = {
     english: "English",
     yellow: "Yellow",
     green: "Green",
+    purple: "Purple",
     red: "Red",
     cancel: "Cancel",
     confirm: "Confirm",
@@ -776,6 +780,7 @@ function openMarkStylePicker() {
   const redLabel = t("red");
   const yellowLabel = t("yellow");
   const greenLabel = t("green");
+  const purpleLabel = t("purple");
   modalTitle.textContent = t("chooseColorFor");
   modalOptions.classList.add("mark-color-grid");
   modalOptions.innerHTML = `
@@ -789,6 +794,11 @@ function openMarkStylePicker() {
       <input type="radio" name="x-style" value="x_yellow" ${markStyles.X === "x_yellow" ? "checked" : ""}>
       <img src="Assets/XXX Yellow.png" alt="X ${yellowLabel}">
       <span>${yellowLabel}</span>
+    </label>
+    <label class="color-option">
+      <input type="radio" name="x-style" value="x_purple" ${markStyles.X === "x_purple" ? "checked" : ""}>
+      <img src="Assets/XXX Purple.png" alt="X ${purpleLabel}">
+      <span>${purpleLabel}</span>
     </label>
     <label class="color-option">
       <input type="radio" name="x-style" value="x_red" ${markStyles.X === "x_red" ? "checked" : ""}>
@@ -805,6 +815,11 @@ function openMarkStylePicker() {
       <input type="radio" name="o-style" value="o_yellow" ${markStyles.O === "o_yellow" ? "checked" : ""}>
       <img src="Assets/OOO Yellow.png" alt="O ${yellowLabel}">
       <span>${yellowLabel}</span>
+    </label>
+    <label class="color-option">
+      <input type="radio" name="o-style" value="o_purple" ${markStyles.O === "o_purple" ? "checked" : ""}>
+      <img src="Assets/OOO Purple.png" alt="O ${purpleLabel}">
+      <span>${purpleLabel}</span>
     </label>
     <label class="color-option">
       <input type="radio" name="o-style" value="o_red" ${markStyles.O === "o_red" ? "checked" : ""}>
@@ -940,16 +955,6 @@ settingsToggleButton.addEventListener("click", openSettingsModal);
 soundToggleButton.addEventListener("click", toggleSound);
 settingsApplyButton.addEventListener("click", applySettings);
 settingsCancelButton.addEventListener("click", closeSettingsModal);
-xStyleButton.addEventListener("click", (event) => {
-  event.stopPropagation();
-  choosePlayerMarkFromScoreboard("X");
-});
-oStyleButton.addEventListener("click", (event) => {
-  event.stopPropagation();
-  choosePlayerMarkFromScoreboard("O");
-});
-xScoreCard.addEventListener("click", () => choosePlayerMarkFromScoreboard("X"));
-oScoreCard.addEventListener("click", () => choosePlayerMarkFromScoreboard("O"));
 modalApplyButton.addEventListener("click", applyMarkStyle);
 modalCancelButton.addEventListener("click", closeMarkStylePicker);
 modalOptions.addEventListener("change", previewMarkStyle);

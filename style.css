@@ -89,6 +89,14 @@ body {
 
 .top-actions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.top-actions-row {
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -182,7 +190,7 @@ body {
 }
 
 .mark-color-grid {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .color-section-label {
@@ -320,7 +328,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  cursor: pointer;
+  cursor: default;
 }
 
 .score-card.is-current-turn {
@@ -356,9 +364,9 @@ body {
   border-radius: 0;
   padding: 0;
   min-height: 0;
-  cursor: pointer;
+  cursor: default;
   z-index: 2;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .score-icon {
