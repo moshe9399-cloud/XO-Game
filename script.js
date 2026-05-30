@@ -13,8 +13,12 @@ const winLine = document.getElementById("win-line");
 const pageBody = document.body;
 const scoreXElement = document.getElementById("score-x");
 const scoreOElement = document.getElementById("score-o");
+const scoreboardElement = document.querySelector(".scoreboard");
 const xScoreCard = document.getElementById("x-score-card");
 const oScoreCard = document.getElementById("o-score-card");
+const swapScoreMarksButton = document.getElementById("swap-score-marks");
+const xPlayerNameElement = document.getElementById("x-player-name");
+const oPlayerNameElement = document.getElementById("o-player-name");
 const xStyleButton = document.getElementById("x-style-button");
 const oStyleButton = document.getElementById("o-style-button");
 const markStyleModal = document.getElementById("mark-style-modal");
@@ -29,10 +33,26 @@ const resultMessage = document.getElementById("result-message");
 const resultConfirmButton = document.getElementById("result-confirm");
 const resultCard = document.getElementById("result-card");
 const resultTitle = document.getElementById("result-title");
+const swapConfirmModal = document.getElementById("swap-confirm-modal");
+const swapConfirmCard = document.getElementById("swap-confirm-card");
+const swapConfirmTitle = document.getElementById("swap-confirm-title");
+const swapConfirmMessage = document.getElementById("swap-confirm-message");
+const swapConfirmNoButton = document.getElementById("swap-confirm-no");
+const swapConfirmYesButton = document.getElementById("swap-confirm-yes");
 const nicknameModal = document.getElementById("nickname-modal");
 const nicknameCard = document.getElementById("nickname-card");
 const nicknameTitle = document.getElementById("nickname-title");
 const nicknameInput = document.getElementById("nickname-input");
+const singlePlayerFields = document.getElementById("single-player-fields");
+const friendPlayerFields = document.getElementById("friend-player-fields");
+const friendOneInput = document.getElementById("friend-one-input");
+const friendTwoInput = document.getElementById("friend-two-input");
+const friendOneMarkPreview = document.querySelector('[data-friend-mark-preview="one"]');
+const friendTwoMarkPreview = document.querySelector('[data-friend-mark-preview="two"]');
+const swapFriendMarksButton = document.getElementById("swap-friend-marks");
+const startupGameModeInputs = document.querySelectorAll('input[name="startup-game-mode"]');
+const chooseMarkTitle = document.getElementById("choose-mark-title");
+const playerMarkOptions = document.getElementById("player-mark-options");
 const nicknameError = document.getElementById("nickname-error");
 const nicknameConfirmButton = document.getElementById("nickname-confirm");
 const nicknameCloseButton = document.getElementById("nickname-close");
@@ -45,14 +65,20 @@ const markImageByStyle = {
   x_yellow: "Assets/XXX Yellow.png",
   x_green: "Assets/XXX Green.png",
   x_purple: "Assets/XXX Purple.png",
+  x_blue: "Assets/XXX Blue.png",
   o_green: "Assets/OOO Green.png",
   o_red: "Assets/OOO Red.png",
   o_yellow: "Assets/OOO Yellow.png",
-  o_purple: "Assets/OOO Purple.png"
+  o_purple: "Assets/OOO Purple.png",
+  o_blue: "Assets/OOO Blue.png"
+};
+const markIconByMark = {
+  X: xStyleButton.querySelector(".score-icon").getAttribute("src"),
+  O: oStyleButton.querySelector(".score-icon").getAttribute("src")
 };
 const markStyleOrder = {
-  X: ["x_green", "x_yellow", "x_purple", "x_red"],
-  O: ["o_green", "o_yellow", "o_purple", "o_red"]
+  X: ["x_green", "x_yellow", "x_purple", "x_blue", "x_red"],
+  O: ["o_green", "o_yellow", "o_purple", "o_blue", "o_red"]
 };
 
 let board = Array(9).fill("");
@@ -63,12 +89,17 @@ let computerDifficulty = "normal";
 let winLineColor = "yellow";
 let language = "en";
 let playerName = "";
+let friendOneName = "";
+let friendTwoName = "";
+let friendOneMark = "X";
+const playerNamesByMark = { X: "", O: "" };
 let playerMark = "";
 let nextStartingMark = "X";
 let hasStarted = false;
 let nicknameModalSnapshot = null;
 let isSoundOn = true;
 let startupOpponentColorsOpen = false;
+let activeStylePickerMark = null;
 const scores = { X: 0, O: 0 };
 const markStyles = { X: "x_red", O: "o_green" };
 let previewOriginalStyles = { X: "x_red", O: "o_green" };
@@ -100,6 +131,7 @@ const i18n = {
     yellow: "\u05e6\u05d4\u05d5\u05d1",
     green: "\u05d9\u05e8\u05d5\u05e7",
     purple: "\u05e1\u05d2\u05d5\u05dc",
+    blue: "\u05db\u05d7\u05d5\u05dc",
     red: "\u05d0\u05d3\u05d5\u05dd",
     cancel: "\u05d1\u05d9\u05d8\u05d5\u05dc",
     confirm: "\u05d0\u05d9\u05e9\u05d5\u05e8",
@@ -116,9 +148,18 @@ const i18n = {
     startGame: "\u05d4\u05ea\u05d7\u05dc \u05de\u05e9\u05d7\u05e7",
     nicknameError: "\u05e6\u05e8\u05d9\u05da \u05dc\u05d4\u05e7\u05dc\u05d9\u05d3 \u05db\u05d9\u05e0\u05d5\u05d9",
     chooseMarkError: "\u05e6\u05e8\u05d9\u05da \u05dc\u05d1\u05d7\u05d5\u05e8 X \u05d0\u05d5 O",
+    friendNamesError: "\u05e6\u05e8\u05d9\u05da \u05dc\u05d4\u05e7\u05dc\u05d9\u05d3 \u05e9\u05e0\u05d9 \u05db\u05d9\u05e0\u05d5\u05d9\u05d9\u05dd",
     changeName: "\u05e9\u05e0\u05d4 \u05d1\u05d7\u05d9\u05e8\u05d5\u05ea",
     chooseMark: "\u05d1\u05d7\u05e8 \u05d1\u05de\u05d4 \u05d0\u05ea\u05d4 \u05de\u05e9\u05d7\u05e7:",
     chooseStartupColors: "\u05d1\u05d7\u05e8 \u05e6\u05d1\u05e2\u05d9\u05dd:",
+    friendOnePlaceholder: "\u05db\u05d9\u05e0\u05d5\u05d9 \u05e9\u05d7\u05e7\u05df 1",
+    friendTwoPlaceholder: "\u05db\u05d9\u05e0\u05d5\u05d9 \u05e9\u05d7\u05e7\u05df 2",
+    swapMarks: "\u05d4\u05d7\u05dc\u05e3 X/O",
+    computerName: "\u05de\u05d7\u05e9\u05d1",
+    resetScoreQuestionTitle: "\u05d4\u05d7\u05dc\u05e4\u05ea \u05e1\u05d9\u05de\u05df",
+    resetScoreQuestion: "\u05d4\u05d0\u05dd \u05dc\u05d0\u05e4\u05e1 \u05d0\u05ea \u05d4\u05ea\u05d5\u05e6\u05d0\u05d4?",
+    yes: "\u05db\u05df",
+    no: "\u05dc\u05d0",
     soundOn: "\u05e1\u05d0\u05d5\u05e0\u05d3 \u05e4\u05e2\u05d9\u05dc",
     soundOff: "\u05e1\u05d0\u05d5\u05e0\u05d3 \u05de\u05d5\u05e9\u05ea\u05e7"
   },
@@ -137,6 +178,7 @@ const i18n = {
     yellow: "Yellow",
     green: "Green",
     purple: "Purple",
+    blue: "Blue",
     red: "Red",
     cancel: "Cancel",
     confirm: "Confirm",
@@ -153,9 +195,18 @@ const i18n = {
     startGame: "Start Game",
     nicknameError: "Please enter a nickname",
     chooseMarkError: "Please choose X or O",
+    friendNamesError: "Please enter both nicknames",
     changeName: "Change Choices",
     chooseMark: "Choose your mark:",
     chooseStartupColors: "Choose colors:",
+    friendOnePlaceholder: "Player 1 nickname",
+    friendTwoPlaceholder: "Player 2 nickname",
+    swapMarks: "Swap X/O",
+    computerName: "Computer",
+    resetScoreQuestionTitle: "Swap Marks",
+    resetScoreQuestion: "Do you want to reset the score?",
+    yes: "Yes",
+    no: "No",
     soundOn: "Sound on",
     soundOff: "Sound off"
   }
@@ -167,7 +218,7 @@ function t(key) {
 
 function applyLanguageToUI() {
   document.documentElement.lang = language;
-  document.documentElement.dir = language === "he" ? "rtl" : "ltr";
+  document.documentElement.dir = "ltr";
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     const key = element.dataset.i18n;
     if (!key) return;
@@ -179,11 +230,19 @@ function applyLanguageToUI() {
   previewNote.textContent = t("preview");
   nicknameTitle.textContent = t("nicknameTitle");
   nicknameInput.placeholder = t("nicknamePlaceholder");
+  friendOneInput.placeholder = t("friendOnePlaceholder");
+  friendTwoInput.placeholder = t("friendTwoPlaceholder");
   nicknameConfirmButton.textContent = t("startGame");
   modalCancelButton.textContent = t("cancel");
   modalApplyButton.textContent = t("confirm");
   resultConfirmButton.textContent = t("confirm");
+  swapConfirmTitle.textContent = t("resetScoreQuestionTitle");
+  swapConfirmMessage.textContent = t("resetScoreQuestion");
+  swapConfirmNoButton.textContent = t("no");
+  swapConfirmYesButton.textContent = t("yes");
   changeNameButton.textContent = t("changeName");
+  swapFriendMarksButton.textContent = `${t("swapMarks")} (${friendOneMark})`;
+  updatePlayerIdentityDisplays();
   updateSoundButton();
   if (nicknameError.textContent) {
     nicknameError.textContent = t("nicknameError");
@@ -201,6 +260,140 @@ function setLanguage(nextLanguage) {
   syncLanguageInputs();
   applyLanguageToUI();
   updateStatusText();
+}
+
+function getDisplayNameForMark(mark) {
+  if (gameMode === "friend") {
+    return playerNamesByMark[mark] || `${t("player")} ${mark}`;
+  }
+
+  if (mark === playerMark) {
+    return playerName || `${t("player")} ${mark}`;
+  }
+
+  return t("computerName");
+}
+
+function getScoreCardMark(cardSide) {
+  if (gameMode === "friend") {
+    return cardSide === "left" ? friendOneMark : getOpponentMark(friendOneMark);
+  }
+
+  return cardSide === "left" ? "X" : "O";
+}
+
+function getScoreIconPath(mark) {
+  return markIconByMark[mark];
+}
+
+function updateScoreCardIcons() {
+  const leftMark = getScoreCardMark("left");
+  const rightMark = getScoreCardMark("right");
+  const xIcon = xStyleButton.querySelector(".score-icon");
+  const oIcon = oStyleButton.querySelector(".score-icon");
+  xIcon.src = getScoreIconPath(leftMark);
+  xIcon.alt = leftMark;
+  xStyleButton.setAttribute("aria-label", leftMark);
+  oIcon.src = getScoreIconPath(rightMark);
+  oIcon.alt = rightMark;
+  oStyleButton.setAttribute("aria-label", rightMark);
+}
+
+function updatePlayerIdentityDisplays() {
+  const xName = gameMode === "friend" ? friendOneName : getDisplayNameForMark("X");
+  const oName = gameMode === "friend" ? friendTwoName : getDisplayNameForMark("O");
+  xPlayerNameElement.textContent = xName;
+  oPlayerNameElement.textContent = oName;
+  scoreboardElement.classList.toggle("is-friend-mode", gameMode === "friend");
+  swapScoreMarksButton.classList.toggle("hidden", gameMode !== "friend");
+  updateScoreCardIcons();
+
+  if (gameMode === "friend") {
+    playerNameDisplay.textContent = `${xName} vs ${oName}`;
+    return;
+  }
+
+  playerNameDisplay.textContent = playerName;
+}
+
+function syncStartupModeUI() {
+  const selectedMode = getCheckedValue("startup-game-mode", gameMode);
+  const isFriendMode = selectedMode === "friend";
+  singlePlayerFields.classList.toggle("hidden", isFriendMode);
+  friendPlayerFields.classList.toggle("hidden", !isFriendMode);
+  swapFriendMarksButton.textContent = `${t("swapMarks")} (${friendOneMark})`;
+  updateFriendMarkPreviews();
+}
+
+function updateFriendMarkPreviews() {
+  const friendTwoMark = getOpponentMark(friendOneMark);
+  friendOneMarkPreview.src = friendOneMark === "X" ? "Assets/icon/××™×§×¡.png" : "Assets/icon/×¢×™×’×•×œ.png";
+  friendOneMarkPreview.alt = friendOneMark;
+  friendTwoMarkPreview.src = friendTwoMark === "X" ? "Assets/icon/××™×§×¡.png" : "Assets/icon/×¢×™×’×•×œ.png";
+  friendTwoMarkPreview.alt = friendTwoMark;
+}
+
+function syncStartupModeInputs() {
+  startupGameModeInputs.forEach((input) => {
+    input.checked = input.value === gameMode;
+  });
+  syncStartupModeUI();
+}
+
+function assignFriendNamesByMark() {
+  const friendTwoMark = getOpponentMark(friendOneMark);
+  playerNamesByMark[friendOneMark] = friendOneName;
+  playerNamesByMark[friendTwoMark] = friendTwoName;
+}
+
+function swapFriendMarksInGame() {
+  if (gameMode !== "friend") return;
+  if (scores.X > 0 || scores.O > 0) {
+    swapConfirmTitle.textContent = t("resetScoreQuestionTitle");
+    swapConfirmMessage.textContent = t("resetScoreQuestion");
+    swapConfirmNoButton.textContent = t("no");
+    swapConfirmYesButton.textContent = t("yes");
+    centerModalCard(swapConfirmCard);
+    swapConfirmModal.classList.remove("hidden");
+    return;
+  }
+
+  performFriendMarkSwap(false);
+}
+
+function performFriendMarkSwap(shouldResetScore) {
+  friendOneMark = getOpponentMark(friendOneMark);
+  assignFriendNamesByMark();
+  updatePlayerIdentityDisplays();
+  if (shouldResetScore) {
+    resetAll();
+  } else {
+    resetGame();
+  }
+}
+
+function closeSwapConfirmModal() {
+  swapConfirmModal.classList.add("hidden");
+}
+
+function handleSwapConfirmNo() {
+  closeSwapConfirmModal();
+  performFriendMarkSwap(false);
+}
+
+function handleSwapConfirmYes() {
+  closeSwapConfirmModal();
+  performFriendMarkSwap(true);
+}
+
+function swapFriendMarks() {
+  friendOneMark = getOpponentMark(friendOneMark);
+  const input = document.querySelector(`input[name="player-mark"][value="${friendOneMark}"]`);
+  if (input) input.checked = true;
+  playerMark = friendOneMark;
+  startupOpponentColorsOpen = false;
+  updateStartupColorFlow();
+  syncStartupModeUI();
 }
 
 function updateSoundButton() {
@@ -337,7 +530,8 @@ function isComputerTurn() {
 }
 
 function syncStartupChoices() {
-  const playerMarkInput = document.querySelector(`input[name="player-mark"][value="${playerMark}"]`);
+  const activeMark = gameMode === "friend" ? friendOneMark : playerMark;
+  const playerMarkInput = document.querySelector(`input[name="player-mark"][value="${activeMark}"]`);
   const xStyleInput = document.querySelector(`input[name="startup-x-style"][value="${markStyles.X}"]`);
   const oStyleInput = document.querySelector(`input[name="startup-o-style"][value="${markStyles.O}"]`);
   document.querySelectorAll('input[name="player-mark"]').forEach((input) => {
@@ -346,15 +540,25 @@ function syncStartupChoices() {
   if (playerMarkInput) playerMarkInput.checked = true;
   if (xStyleInput) xStyleInput.checked = true;
   if (oStyleInput) oStyleInput.checked = true;
+  syncStartupModeInputs();
   startupOpponentColorsOpen = false;
   updateStartupColorFlow();
 }
 
 function applyStartupChoices() {
-  playerMark = getCheckedValue("player-mark", playerMark);
+  const selectedStartupMode = getCheckedValue("startup-game-mode", gameMode);
+  gameMode = selectedStartupMode;
+  if (gameMode === "friend") {
+    friendOneMark = "X";
+    playerMark = "X";
+    assignFriendNamesByMark();
+  } else {
+    playerMark = getCheckedValue("player-mark", playerMark || friendOneMark);
+  }
   updateColorOptionLocks("startup-x-style", "startup-o-style", playerMark || "X");
   markStyles.X = getCheckedValue("startup-x-style", markStyles.X);
   markStyles.O = getCheckedValue("startup-o-style", markStyles.O);
+  updatePlayerIdentityDisplays();
   updateTurnScoreHighlight();
   rerenderMarksOnBoard();
 }
@@ -363,7 +567,12 @@ function captureNicknameModalSnapshot() {
   return {
     language,
     playerName,
+    friendOneName,
+    friendTwoName,
+    friendOneMark,
+    gameMode,
     playerMark,
+    playerNamesByMark: { ...playerNamesByMark },
     markStyles: { ...markStyles }
   };
 }
@@ -372,13 +581,19 @@ function restoreNicknameModalSnapshot() {
   if (!nicknameModalSnapshot) return;
   language = nicknameModalSnapshot.language;
   playerName = nicknameModalSnapshot.playerName;
+  friendOneName = nicknameModalSnapshot.friendOneName;
+  friendTwoName = nicknameModalSnapshot.friendTwoName;
+  friendOneMark = nicknameModalSnapshot.friendOneMark;
+  gameMode = nicknameModalSnapshot.gameMode;
   playerMark = nicknameModalSnapshot.playerMark;
+  playerNamesByMark.X = nicknameModalSnapshot.playerNamesByMark.X;
+  playerNamesByMark.O = nicknameModalSnapshot.playerNamesByMark.O;
   markStyles.X = nicknameModalSnapshot.markStyles.X;
   markStyles.O = nicknameModalSnapshot.markStyles.O;
-  playerNameDisplay.textContent = playerName;
   syncLanguageInputs();
   syncStartupChoices();
   applyLanguageToUI();
+  updatePlayerIdentityDisplays();
   updateTurnScoreHighlight();
   rerenderMarksOnBoard();
 }
@@ -400,17 +615,18 @@ function updateStatusText() {
     statusText.textContent = `${t("computerTurn")} (${getComputerMark()})`;
     return;
   }
-  statusText.textContent = `${t("turn")} ${currentPlayer}`;
+  statusText.textContent = `${t("turn")} ${getDisplayNameForMark(currentPlayer)} (${currentPlayer})`;
 }
 
 function updateScoreboard() {
-  scoreXElement.textContent = String(scores.X);
-  scoreOElement.textContent = String(scores.O);
+  scoreXElement.textContent = String(scores[getScoreCardMark("left")]);
+  scoreOElement.textContent = String(scores[getScoreCardMark("right")]);
+  updatePlayerIdentityDisplays();
 }
 
 function updateTurnScoreHighlight() {
-  xScoreCard.classList.toggle("is-current-turn", isGameActive && currentPlayer === "X");
-  oScoreCard.classList.toggle("is-current-turn", isGameActive && currentPlayer === "O");
+  xScoreCard.classList.toggle("is-current-turn", isGameActive && currentPlayer === getScoreCardMark("left"));
+  oScoreCard.classList.toggle("is-current-turn", isGameActive && currentPlayer === getScoreCardMark("right"));
 }
 
 function applyWinLineColor() {
@@ -462,10 +678,11 @@ function finishGameIfNeeded() {
     updateTurnScoreHighlight();
     scores[winner] += 1;
     updateScoreboard();
-    statusText.textContent = `${t("player")} ${winner} ${t("winner")}`;
+    const winnerName = getDisplayNameForMark(winner);
+    statusText.textContent = `${winnerName} (${winner}) ${t("winner")}`;
     pattern.forEach((index) => cells[index].classList.add("win"));
     drawWinLine(pattern);
-    showEndGamePopup(`${t("player")} ${winner} ${t("winner")}`);
+    showEndGamePopup(`${winnerName} (${winner}) ${t("winner")}`);
     return true;
   }
 
@@ -676,6 +893,10 @@ function applySettings() {
   } else if (languageChanged) {
     updateStatusText();
   }
+
+  if (modeChanged) {
+    openNicknameModal();
+  }
 }
 
 function resetAll() {
@@ -719,31 +940,46 @@ function closeSettingsModal() {
 }
 
 function confirmNickname() {
+  const selectedStartupMode = getCheckedValue("startup-game-mode", gameMode);
+  const isFriendMode = selectedStartupMode === "friend";
+  const selectedPlayerMark = getCheckedValue("player-mark", "");
+  if (!isFriendMode && !selectedPlayerMark) {
+    nicknameError.textContent = t("chooseMarkError");
+    return;
+  }
+
   const nextName = nicknameInput.value.trim();
-  if (!nextName) {
+  const nextFriendOneName = friendOneInput.value.trim();
+  const nextFriendTwoName = friendTwoInput.value.trim();
+  if (!isFriendMode && !nextName) {
     nicknameError.textContent = t("nicknameError");
     nicknameInput.focus();
     return;
   }
 
-  const selectedPlayerMark = getCheckedValue("player-mark", "");
-  if (!selectedPlayerMark) {
-    nicknameError.textContent = t("chooseMarkError");
+  if (isFriendMode && (!nextFriendOneName || !nextFriendTwoName)) {
+    nicknameError.textContent = t("friendNamesError");
+    (nextFriendOneName ? friendTwoInput : friendOneInput).focus();
     return;
   }
 
   const previousPlayerMark = playerMark;
+  const previousGameMode = gameMode;
+  const previousFriendOneMark = friendOneMark;
   const wasStarted = hasStarted;
   playerName = nextName;
+  friendOneName = nextFriendOneName;
+  friendTwoName = nextFriendTwoName;
+  friendOneMark = isFriendMode ? "X" : selectedPlayerMark;
   applyStartupChoices();
   hasStarted = true;
-  playerNameDisplay.textContent = playerName;
+  updatePlayerIdentityDisplays();
   changeNameButton.classList.remove("hidden");
   nicknameError.textContent = "";
   nicknameModal.classList.add("hidden");
   nicknameModalSnapshot = null;
 
-  if (wasStarted && previousPlayerMark !== playerMark) {
+  if (wasStarted && (previousPlayerMark !== playerMark || previousGameMode !== gameMode || previousFriendOneMark !== friendOneMark)) {
     resetAll();
   } else if (!wasStarted) {
     resetGame();
@@ -754,16 +990,21 @@ function confirmNickname() {
 function openNicknameModal() {
   nicknameModalSnapshot = captureNicknameModalSnapshot();
   nicknameInput.value = playerName;
+  friendOneInput.value = friendOneName;
+  friendTwoInput.value = friendTwoName;
   nicknameError.textContent = "";
   syncStartupChoices();
   nicknameCloseButton.classList.toggle("hidden", !hasStarted);
   nicknameModal.classList.remove("hidden");
   centerModalCard(nicknameCard);
   if (!hasStarted) {
-    nicknameInput.focus();
-    nicknameInput.select();
+    const activeInput = getCheckedValue("startup-game-mode", gameMode) === "friend" ? friendOneInput : nicknameInput;
+    activeInput.focus();
+    activeInput.select();
   } else {
     nicknameInput.blur();
+    friendOneInput.blur();
+    friendTwoInput.blur();
   }
 }
 
@@ -776,11 +1017,13 @@ function closeNicknameModal() {
 }
 
 function openMarkStylePicker() {
+  activeStylePickerMark = null;
   previewOriginalStyles = { ...markStyles };
   const redLabel = t("red");
   const yellowLabel = t("yellow");
   const greenLabel = t("green");
   const purpleLabel = t("purple");
+  const blueLabel = t("blue");
   modalTitle.textContent = t("chooseColorFor");
   modalOptions.classList.add("mark-color-grid");
   modalOptions.innerHTML = `
@@ -799,6 +1042,11 @@ function openMarkStylePicker() {
       <input type="radio" name="x-style" value="x_purple" ${markStyles.X === "x_purple" ? "checked" : ""}>
       <img src="Assets/XXX Purple.png" alt="X ${purpleLabel}">
       <span>${purpleLabel}</span>
+    </label>
+    <label class="color-option">
+      <input type="radio" name="x-style" value="x_blue" ${markStyles.X === "x_blue" ? "checked" : ""}>
+      <img src="Assets/XXX Blue.png" alt="X ${blueLabel}">
+      <span>${blueLabel}</span>
     </label>
     <label class="color-option">
       <input type="radio" name="x-style" value="x_red" ${markStyles.X === "x_red" ? "checked" : ""}>
@@ -822,6 +1070,11 @@ function openMarkStylePicker() {
       <span>${purpleLabel}</span>
     </label>
     <label class="color-option">
+      <input type="radio" name="o-style" value="o_blue" ${markStyles.O === "o_blue" ? "checked" : ""}>
+      <img src="Assets/OOO Blue.png" alt="O ${blueLabel}">
+      <span>${blueLabel}</span>
+    </label>
+    <label class="color-option">
       <input type="radio" name="o-style" value="o_red" ${markStyles.O === "o_red" ? "checked" : ""}>
       <img src="Assets/OOO Red.png" alt="O ${redLabel}">
       <span>${redLabel}</span>
@@ -832,16 +1085,56 @@ function openMarkStylePicker() {
   markStyleModal.classList.remove("hidden");
 }
 
+function getStyleLabel(styleValue) {
+  return t(getStyleColor(styleValue));
+}
+
+function openSingleMarkStylePicker(mark) {
+  activeStylePickerMark = mark;
+  previewOriginalStyles = { ...markStyles };
+  modalTitle.textContent = `${t("chooseColorFor")} ${mark}`;
+  modalOptions.classList.add("mark-color-grid", "single-mark-color-grid");
+  modalOptions.innerHTML = markStyleOrder[mark].map((styleValue) => {
+    const label = getStyleLabel(styleValue);
+    return `
+      <label class="color-option">
+        <input type="radio" name="single-style" value="${styleValue}" ${markStyles[mark] === styleValue ? "checked" : ""}>
+        <img src="${markImageByStyle[styleValue]}" alt="${mark} ${label}">
+        <span>${label}</span>
+      </label>
+    `;
+  }).join("");
+  previewNote.textContent = t("preview");
+  centerModalCard(markStyleCard);
+  markStyleModal.classList.remove("hidden");
+}
+
 function closeMarkStylePicker(shouldRevert = true) {
   if (shouldRevert) {
     markStyles.X = previewOriginalStyles.X;
     markStyles.O = previewOriginalStyles.O;
     rerenderMarksOnBoard();
   }
+  activeStylePickerMark = null;
+  modalOptions.classList.remove("single-mark-color-grid");
   markStyleModal.classList.add("hidden");
 }
 
 function applyMarkStyle() {
+  if (activeStylePickerMark) {
+    const selectedStyle = document.querySelector('input[name="single-style"]:checked');
+    if (selectedStyle) {
+      markStyles[activeStylePickerMark] = selectedStyle.value;
+      const otherMark = getOpponentMark(activeStylePickerMark);
+      if (getStyleColor(markStyles[otherMark]) === getStyleColor(selectedStyle.value)) {
+        markStyles[otherMark] = getFirstStyleWithDifferentColor(otherMark, getStyleColor(selectedStyle.value));
+      }
+    }
+    rerenderMarksOnBoard();
+    closeMarkStylePicker(false);
+    return;
+  }
+
   updateColorOptionLocks("x-style", "o-style", "X");
   const selectedX = document.querySelector('input[name="x-style"]:checked');
   const selectedO = document.querySelector('input[name="o-style"]:checked');
@@ -852,6 +1145,19 @@ function applyMarkStyle() {
 }
 
 function previewMarkStyle(event) {
+  if (activeStylePickerMark) {
+    const selectedStyle = document.querySelector('input[name="single-style"]:checked');
+    if (selectedStyle) {
+      markStyles[activeStylePickerMark] = selectedStyle.value;
+      const otherMark = getOpponentMark(activeStylePickerMark);
+      if (getStyleColor(markStyles[otherMark]) === getStyleColor(selectedStyle.value)) {
+        markStyles[otherMark] = getFirstStyleWithDifferentColor(otherMark, getStyleColor(selectedStyle.value));
+      }
+      rerenderMarksOnBoard();
+    }
+    return;
+  }
+
   const changedMark = event?.target?.name === "o-style" ? "O" : "X";
   updateColorOptionLocks("x-style", "o-style", changedMark);
   const selectedX = document.querySelector('input[name="x-style"]:checked');
@@ -872,8 +1178,12 @@ function handleStartupColorChange(event) {
 }
 
 function handleStartupPlayerMarkChange() {
+  if (getCheckedValue("startup-game-mode", gameMode) === "friend") {
+    friendOneMark = getCheckedValue("player-mark", friendOneMark);
+  }
   startupOpponentColorsOpen = false;
   nicknameError.textContent = "";
+  syncStartupModeUI();
   updateStartupColorFlow();
 }
 
@@ -953,17 +1263,23 @@ cells.forEach((cell) => {
 resetButton.addEventListener("click", resetAll);
 settingsToggleButton.addEventListener("click", openSettingsModal);
 soundToggleButton.addEventListener("click", toggleSound);
+xStyleButton.addEventListener("click", () => openSingleMarkStylePicker(getScoreCardMark("left")));
+oStyleButton.addEventListener("click", () => openSingleMarkStylePicker(getScoreCardMark("right")));
+swapScoreMarksButton.addEventListener("click", swapFriendMarksInGame);
 settingsApplyButton.addEventListener("click", applySettings);
 settingsCancelButton.addEventListener("click", closeSettingsModal);
 modalApplyButton.addEventListener("click", applyMarkStyle);
 modalCancelButton.addEventListener("click", closeMarkStylePicker);
 modalOptions.addEventListener("change", previewMarkStyle);
 resultConfirmButton.addEventListener("click", handleResultConfirm);
+swapConfirmNoButton.addEventListener("click", handleSwapConfirmNo);
+swapConfirmYesButton.addEventListener("click", handleSwapConfirmYes);
 document.addEventListener("keydown", handleGlobalKeydown);
 nicknameCloseButton.addEventListener("click", closeNicknameModal);
 settingsModal.addEventListener("click", (event) => handleModalBackdropClick(event, closeSettingsModal));
 markStyleModal.addEventListener("click", (event) => handleModalBackdropClick(event, closeMarkStylePicker));
 resultModal.addEventListener("click", (event) => handleModalBackdropClick(event, handleResultConfirm));
+swapConfirmModal.addEventListener("click", (event) => handleModalBackdropClick(event, handleSwapConfirmNo));
 nicknameModal.addEventListener("click", (event) => handleModalBackdropClick(event, closeNicknameModal));
 enableModalDrag(markStyleModal, markStyleCard);
 enableModalDrag(resultModal, resultCard);
@@ -975,6 +1291,29 @@ nicknameInput.addEventListener("keydown", (event) => {
     confirmNickname();
   }
 });
+friendOneInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    confirmNickname();
+  }
+});
+friendTwoInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    confirmNickname();
+  }
+});
+startupGameModeInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    nicknameError.textContent = "";
+    if (getCheckedValue("startup-game-mode", gameMode) === "friend" && !getCheckedValue("player-mark", "")) {
+      playerMark = "X";
+      const markInput = document.querySelector('input[name="player-mark"][value="X"]');
+      if (markInput) markInput.checked = true;
+    }
+    syncStartupModeUI();
+    updateStartupColorFlow();
+  });
+});
+swapFriendMarksButton.addEventListener("click", swapFriendMarks);
 nicknameLanguageInputs.forEach((input) => {
   input.addEventListener("change", () => setLanguage(input.value));
 });

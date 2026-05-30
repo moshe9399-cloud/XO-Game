@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>איקס עיגול</title>
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
   <main class="game">
@@ -23,12 +23,17 @@
     <p id="status">תור של X</p>
     <section class="scoreboard" aria-label="תוצאה">
       <div id="x-score-card" class="score-card">
+        <span id="x-player-name" class="score-player-name"></span>
         <button id="x-style-button" class="score-label-button" type="button" aria-label="X">
           <img class="score-icon" src="Assets/icon/איקס.png" alt="X">
         </button>
         <span id="score-x" class="score-value">0</span>
       </div>
+      <button id="swap-score-marks" class="swap-score-marks hidden" type="button" aria-label="Swap X and O">
+        <img src="Assets/icon/⬌.png" alt="⬌">
+      </button>
       <div id="o-score-card" class="score-card">
+        <span id="o-player-name" class="score-player-name"></span>
         <button id="o-style-button" class="score-label-button" type="button" aria-label="O">
           <img class="score-icon" src="Assets/icon/עיגול.png" alt="O">
         </button>
@@ -67,10 +72,33 @@
         </label>
       </div>
       <p id="nickname-title" class="settings-title">בחר כינוי</p>
-      <input id="nickname-input" class="nickname-input" type="text" maxlength="18" autocomplete="off">
+      <div class="startup-mode-options">
+        <label class="startup-mode-option">
+          <input type="radio" name="startup-game-mode" value="computer" checked>
+          <span data-i18n="modeComputer">Play vs Computer</span>
+        </label>
+        <label class="startup-mode-option">
+          <input type="radio" name="startup-game-mode" value="friend">
+          <span data-i18n="modeFriend">Play with Friend</span>
+        </label>
+      </div>
+      <div id="single-player-fields">
+        <input id="nickname-input" class="nickname-input" type="text" maxlength="18" autocomplete="off">
+      </div>
+      <div id="friend-player-fields" class="friend-player-fields hidden">
+        <div class="friend-name-card" data-friend-card="one">
+          <input id="friend-one-input" class="nickname-input" type="text" maxlength="18" autocomplete="off">
+          <img class="friend-mark-preview" data-friend-mark-preview="one" src="Assets/icon/××™×§×¡.png" alt="X">
+        </div>
+        <div class="friend-name-card" data-friend-card="two">
+          <input id="friend-two-input" class="nickname-input" type="text" maxlength="18" autocomplete="off">
+          <img class="friend-mark-preview" data-friend-mark-preview="two" src="Assets/icon/×¢×™×’×•×œ.png" alt="O">
+        </div>
+        <button id="swap-friend-marks" class="swap-friend-marks" type="button" data-i18n="swapMarks">Swap X/O</button>
+      </div>
       <p id="nickname-error" class="nickname-error"></p>
-      <p class="settings-title small-title" data-i18n="chooseMark">Choose your mark:</p>
-      <div class="player-mark-options">
+      <p id="choose-mark-title" class="settings-title small-title" data-i18n="chooseMark">Choose your mark:</p>
+      <div id="player-mark-options" class="player-mark-options">
         <label class="player-mark-option">
           <input type="radio" name="player-mark" value="X">
           <img class="player-mark-icon" src="Assets/icon/איקס.png" alt="X">
@@ -99,6 +127,11 @@
           <span data-i18n="purple">Purple</span>
         </label>
         <label class="color-option" data-startup-mark="X">
+          <input type="radio" name="startup-x-style" value="x_blue">
+          <img src="Assets/XXX Blue.png" alt="X Blue">
+          <span data-i18n="blue">Blue</span>
+        </label>
+        <label class="color-option" data-startup-mark="X">
           <input type="radio" name="startup-x-style" value="x_red" checked>
           <img src="Assets/XXX Red.png" alt="X Red">
           <span data-i18n="red">Red</span>
@@ -118,6 +151,11 @@
           <input type="radio" name="startup-o-style" value="o_purple">
           <img src="Assets/OOO Purple.png" alt="O Purple">
           <span data-i18n="purple">Purple</span>
+        </label>
+        <label class="color-option" data-startup-mark="O">
+          <input type="radio" name="startup-o-style" value="o_blue">
+          <img src="Assets/OOO Blue.png" alt="O Blue">
+          <span data-i18n="blue">Blue</span>
         </label>
         <label class="color-option" data-startup-mark="O">
           <input type="radio" name="startup-o-style" value="o_red">
@@ -212,6 +250,16 @@
       </div>
     </div>
   </section>
-  <script src="script.js?v=10"></script>
+  <section id="swap-confirm-modal" class="modal hidden" aria-label="Reset score confirmation">
+    <div id="swap-confirm-card" class="modal-card result-card">
+      <p id="swap-confirm-title" class="settings-title"></p>
+      <p id="swap-confirm-message" class="result-message"></p>
+      <div class="modal-actions">
+        <button id="swap-confirm-no" type="button"></button>
+        <button id="swap-confirm-yes" type="button"></button>
+      </div>
+    </div>
+  </section>
+  <script src="script.js?v=21"></script>
 </body>
 </html>
